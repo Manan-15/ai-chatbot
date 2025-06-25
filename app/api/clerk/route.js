@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"; // <- Add this line first
+
 import { Webhook } from "svix";
 import connectDB from "@/config/db";
 import User from "@/models/User";
