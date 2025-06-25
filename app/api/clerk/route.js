@@ -1,36 +1,45 @@
-// 1. Prevent static build
-export const dynamic = "force-dynamic";
-
 import { Webhook } from "svix";
+import connectDB from "@/config/db";
+import User from "@/models/User";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
-export async function POST(req) {
-  const secret = process.env.SIGNING_SECRET;
+export async function POST(req){
+    const wh=new Webhook(process.env.SIGNING_SECRET);
+    const headerPayload=await headers()
+    const svixHeaders={
+        "svix-id":headerPayload.get("svix-id"),
+        "svix-timestamp":headerPayload.get("svix-timestamp"),
+        "svix-signature":headerPayload.get("svix-signature"),
+    };
 
-  if (!secret) {
-    console.warn("SIGNING_SECRET not set. Skipping webhook verification.");
-    return NextResponse.json({ message: "Missing SIGNING_SECRET" });
-  }
+    //get payload and verify it
+    const payload=await req.json();
+    const body=JSON.stringify(payload);
+    const{data,type}=wh.verify(body,svixHeaders);
 
-  const wh = new Webhook(secret);
-  const headerList = headers();
-  const svixHeaders = {
-    "svix-id": headerList.get("svix-id"),
-    "svix-timestamp": headerList.get("svix-timestamp"),
-    "svix-signature": headerList.get("svix-signature"),
-  };
+    //prepare userdata to save in database
+    const userData={
+        _id:data.id,
+        email:data.email_addresses[0].email_address,
+        name:${data.first_name} ${data.last_name},
+        image:data.image_url,
+    };
+    await connectDB();
 
-  const body = JSON.stringify(await req.json());
-  let event;
-
-  try {
-    event = wh.verify(body, svixHeaders);
-  } catch (err) {
-    console.error("Webhook signature verification failed:", err);
-    return NextResponse.json({ message: "Invalid signature", status: 400 });
-  }
-
-  console.log("Received Clerk event:", event.type);
-  return NextResponse.json({ message: "Webhook received" });
+    switch (type) {
+        case 'user.created':
+            await User.create(userData)
+            break;
+        case 'user.updated':
+            await User.findByIdAndUpdate(data.id,userData)
+            break;
+        case 'user.deleted':
+            await User.findByIdAndDelete(data.id)
+            break;
+    
+        default:
+            break;
+    }
+    return NextResponse.json({message:"event received"})
 }
