@@ -8,6 +8,7 @@ import User from "@/models/User";
 
 
 export async function POST(req) {
+  console.log("📨 Webhook POST received"); // 👈 Place it right here
   const secret = process.env.SIGNING_SECRET;
 
   // ✅ Short-circuit before svix logic if missing
