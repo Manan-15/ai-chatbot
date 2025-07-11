@@ -7,8 +7,9 @@ import connectDB from "@/config/db";
 
 //initialise openai client with deepseek api key and base url
 const openai = new OpenAI({
-        baseURL: 'https://api.deepseek.com',
-        apiKey: process.env.DEEPSEEK_API_KEY
+        
+        apiKey: process.env.GROQ_API_KEY,
+        baseURL: "https://api.groq.com/openai/v1",
 });
 
 export async function POST(req) {
@@ -36,8 +37,8 @@ export async function POST(req) {
 
         const completion = await openai.chat.completions.create({
             messages: [{ role: "user", content: prompt}],
-            model: "deepseek-chat",
-            store:true,
+            model: "llama3-70b-8192",
+            temperature: 0.7,
         });
 
         const message=completion.choices[0].message;
