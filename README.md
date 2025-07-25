@@ -4,4 +4,4 @@ This Power BI dashboard showcases chatbot usage data stored in MongoDB Atlas. In
 - 🧠 Role-based message distribution
 - 🌡️ Hourly activity heatmap
 
-(./UserChatAnalytics.png)
+![Dashboard Preview](./UserChatAnalytics.png)
